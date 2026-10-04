@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Giấy phép ra/vào cổng — Wahl Vietnam</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="assets/img/logo-placeholder.png">
+<!-- jsPDF/html2canvas chỉ cần khi tải PDF -> defer để không chặn hiển thị trang -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand__logo" aria-hidden="true">W</div>
+    <div class="brand__text">
+      <span class="brand__name">Wahl Vietnam</span>
+      <span class="brand__title">Giấy phép ra/vào cổng</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <a class="btn btn-ghost btn-sm" href="security.html">Bảo vệ</a>
+    <a class="btn btn-ghost btn-sm" href="hr.html">Quản lý</a>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <nav class="seg-tabs" role="tablist">
+    <button type="button" class="active" id="tab-btn-submit" role="tab" aria-selected="true" aria-controls="tab-submit">Xin giấy phép</button>
+    <button type="button" id="tab-btn-lookup" role="tab" aria-selected="false" aria-controls="tab-lookup">Tra cứu trạng thái</button>
+  </nav>
+
+  <!-- ================= TAB 1: GỬI GIẤY PHÉP ================= -->
+  <section id="tab-submit" role="tabpanel" aria-labelledby="tab-btn-submit">
+
+    <form id="submit-form" novalidate autocomplete="off">
+      <div class="card">
+        <h2 class="card__title"><span class="card__step">1</span>Thông tin nhân viên <small class="muted">/ Employee</small></h2>
+        <div class="grid">
+          <label class="field" data-key="fullName">
+            <span class="field__label">Họ và tên <small>Fullname</small></span>
+            <input type="text" id="f-fullname" name="fullName" autocomplete="name" maxlength="120" placeholder="VD: Nguyễn Văn An">
+            <span class="field__missing">Chưa nhập họ tên</span>
+          </label>
+          <div class="grid-2">
+            <label class="field" data-key="emplId">
+              <span class="field__label">Mã nhân viên <small>Empl. ID</small></span>
+              <input type="text" id="f-emplid" name="emplId" maxlength="40" placeholder="VD: NV001" autocapitalize="characters">
+              <span class="field__missing">Chưa nhập — cần để tra cứu sau này</span>
+            </label>
+            <label class="field" data-key="dept">
+              <span class="field__label">Bộ phận <small>Dept-Line</small></span>
+              <select id="f-dept" name="dept">
+                <option value="">Đang tải…</option>
+              </select>
+              <input type="text" id="f-dept-other" class="hidden" maxlength="80" placeholder="Nhập tên bộ phận">
+              <span class="field__missing">Chưa chọn bộ phận</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title"><span class="card__step">2</span>Thời gian <small class="muted">/ Time</small></h2>
+        <div class="grid-3">
+          <label class="field" data-key="date">
+            <span class="field__label">Ngày <small>Date</small></span>
+            <input type="date" id="f-date" name="date">
+            <span class="field__missing">Chưa chọn ngày</span>
+            <span class="field__hint field__hint--error hidden" id="f-date-warn">Ngày đã qua</span>
+          </label>
+          <label class="field" data-key="comeOut">
+            <span class="field__label">Giờ ra dự kiến <small>Come out</small></span>
+            <input type="time" id="f-come-out" name="comeOutPlanned">
+            <span class="field__missing">Chưa nhập giờ ra</span>
+          </label>
+          <label class="field" data-key="comeIn">
+            <span class="field__label">Giờ vào dự kiến <small>Come in</small></span>
+            <input type="time" id="f-come-in" name="comeInPlanned">
+            <span class="field__missing">Chưa nhập giờ vào (nếu không quay lại thì bỏ qua)</span>
+            <span class="field__hint field__hint--error hidden" id="f-time-warn">Giờ vào nên sau giờ ra</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title"><span class="card__step">3</span>Lý do <small class="muted">/ Reason</small></h2>
+        <div class="field" data-key="reason">
+          <div class="choice-group" id="f-reason" role="radiogroup" aria-label="Lý do">
+            <label class="choice"><input type="radio" name="reason" value="PERSONAL"><span>Việc riêng<small>Personal</small></span></label>
+            <label class="choice"><input type="radio" name="reason" value="ANNUAL_LEAVE"><span>Nghỉ phép năm<small>Annual leave</small></span></label>
+            <label class="choice"><input type="radio" name="reason" value="MATERNITY"><span>Thai sản<small>Maternity leave</small></span></label>
+            <label class="choice"><input type="radio" name="reason" value="SICK"><span>Nghỉ ốm<small>Sick leave</small></span></label>
+            <label class="choice"><input type="radio" name="reason" value="JOB_ACCIDENT"><span>Tai nạn lao động<small>Job accident</small></span></label>
+            <label class="choice"><input type="radio" name="reason" value="OTHER"><span>Khác<small>Other</small></span></label>
+          </div>
+          <span class="field__missing">Chưa chọn lý do</span>
+        </div>
+        <label class="field hidden" id="f-reason-detail-row" data-key="reasonDetail" style="margin-top:12px">
+          <span class="field__label">Chi tiết lý do khác <small>Other reason detail</small></span>
+          <textarea id="f-reason-detail" name="reasonDetail" rows="2" maxlength="500" placeholder="Mô tả ngắn lý do"></textarea>
+          <span class="field__missing">Chưa ghi chi tiết lý do</span>
+        </label>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title"><span class="card__step">4</span>Người duyệt <small class="muted">/ Approvers</small></h2>
+        <div class="grid-2">
+          <label class="field" data-key="sup">
+            <span class="field__label">Giám sát <small>Supervisor (nếu có)</small></span>
+            <select id="f-supervisor" name="supId"><option value="">— Không có —</option></select>
+          </label>
+          <label class="field" data-key="mgr">
+            <span class="field__label">Trưởng bộ phận <small>Dept Manager</small></span>
+            <select id="f-manager" name="mgrId"><option value="">— Không có —</option></select>
+            <span class="field__missing">Chưa chọn trưởng bộ phận</span>
+          </label>
+        </div>
+        <p class="field__hint" id="f-approver-hint" style="margin:10px 0 0">Chọn bộ phận để hiện người duyệt. Thứ tự duyệt: Giám sát → Trưởng bộ phận → HR.</p>
+      </div>
+
+      <div class="card">
+        <h2 class="card__title"><span class="card__step">5</span>Chữ ký người xin phép <small class="muted">/ Applicant</small></h2>
+        <div class="sig-box" id="sig-box" data-key="signature">
+          <canvas id="sig-canvas" class="sig-canvas" aria-label="Khung ký tên"></canvas>
+          <div class="sig-box__line"></div>
+          <div class="sig-box__hint" id="sig-hint">Ký tên vào đây</div>
+        </div>
+        <div class="sig-actions">
+          <span class="sig-status" id="sig-status">Chưa ký</span>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-sig-clear">Ký lại</button>
+        </div>
+      </div>
+
+      <input type="text" id="f-honeypot" name="website" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+      <div class="card">
+        <div class="missing-summary hidden" id="missing-summary"></div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="btn-submit" style="margin-top:12px">Gửi giấy phép</button>
+        <div class="alert alert-danger hidden" id="submit-error" role="alert"></div>
+      </div>
+    </form>
+
+    <div class="card success-card hidden" id="submit-success">
+      <div class="success-card__icon">✓</div>
+      <h2>Đã gửi giấy phép</h2>
+      <p class="muted">Mã giấy phép của bạn — hãy ghi lại để tra cứu:</p>
+      <div class="success-card__id" id="success-id"></div>
+      <p class="muted small" id="success-next"></p>
+      <div class="row" style="justify-content:center">
+        <button type="button" class="btn btn-secondary" id="btn-copy-id">Sao chép mã</button>
+        <button type="button" class="btn btn-primary" id="btn-goto-lookup">Theo dõi trạng thái</button>
+      </div>
+      <button type="button" class="btn btn-ghost btn-sm" id="btn-new-request" style="margin-top:12px">Gửi giấy phép khác</button>
+    </div>
+  </section>
+
+  <!-- ================= TAB 2: TRA CỨU ================= -->
+  <section id="tab-lookup" class="hidden" role="tabpanel" aria-labelledby="tab-btn-lookup">
+    <form id="lookup-form" class="card" novalidate autocomplete="off">
+      <h2 class="card__title">Tra cứu giấy phép</h2>
+      <div class="grid-2">
+        <label class="field" data-key="lRequestId">
+          <span class="field__label">Mã giấy phép <small>Request ID</small></span>
+          <input type="text" id="l-requestid" placeholder="GP-20260101-001" autocapitalize="characters">
+          <span class="field__missing">Nhập mã giấy phép</span>
+        </label>
+        <label class="field" data-key="lEmplId">
+          <span class="field__label">Mã nhân viên <small>Empl. ID</small></span>
+          <input type="text" id="l-emplid" placeholder="Mã nhân viên đã ghi trên giấy">
+          <span class="field__missing">Nhập mã nhân viên</span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="btn-lookup" style="margin-top:14px">Tra cứu</button>
+      <div class="alert alert-danger hidden" id="lookup-error" role="alert"></div>
+    </form>
+
+    <div class="card hidden" id="lookup-result">
+      <div class="row row--between" style="margin-bottom:12px">
+        <div>
+          <div class="mono muted small" id="lookup-id"></div>
+          <div style="font-weight:700;font-size:1.05rem" id="lookup-name"></div>
+        </div>
+        <div id="lookup-status"></div>
+      </div>
+      <dl class="kv" id="lookup-info"></dl>
+      <h3 style="margin:18px 0 10px">Tiến trình duyệt</h3>
+      <div id="lookup-timeline"></div>
+      <div class="row" style="margin-top:16px">
+        <button type="button" class="btn btn-secondary" id="btn-lookup-refresh">Làm mới</button>
+        <button type="button" class="btn btn-primary hidden" id="btn-lookup-pdf">Tải PDF giấy phép</button>
+      </div>
+      <p class="field__hint hidden" id="lookup-pdf-hint" style="margin-top:8px">PDF có thể tải khi giấy phép đã được duyệt đủ.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">© Wahl Vietnam Co., Ltd. · Biểu mẫu HR-F-GEN-0057-01</footer>
+
+<script src="assets/js/config.js"></script>
+<script type="module">
+  import { initIndexPage } from './assets/js/page-index.js';
+  initIndexPage();
+</script>
+
+</body>
+</html>

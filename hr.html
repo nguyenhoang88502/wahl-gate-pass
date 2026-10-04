@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Quản lý giấy phép — Wahl Vietnam</title>
+<link rel="stylesheet" href="assets/css/style.css">
+<link rel="icon" href="assets/img/logo-placeholder.png">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand__logo" aria-hidden="true">W</div>
+    <div class="brand__text">
+      <span class="brand__name">Wahl Vietnam</span>
+      <span class="brand__title">Quản lý giấy phép ra/vào cổng</span>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div id="user-info" class="user-chip hidden"></div>
+    <button type="button" id="btn-logout" class="btn btn-secondary btn-sm hidden">Đăng xuất</button>
+  </div>
+</header>
+
+<main class="app-main app-main--wide">
+
+  <!-- ============ ĐĂNG NHẬP / ĐĂNG KÝ ============ -->
+  <section id="auth-section" class="auth-wrap hidden">
+    <div class="card">
+      <div class="auth-head">
+        <h1>Đăng nhập</h1>
+        <p>Dành cho Giám sát, Trưởng bộ phận, HR và Quản trị</p>
+      </div>
+      <nav class="seg-tabs">
+        <button type="button" id="auth-tab-login" class="active">Đăng nhập</button>
+        <button type="button" id="auth-tab-register">Đăng ký</button>
+      </nav>
+
+      <form id="login-form" novalidate>
+        <div class="grid">
+          <label class="field">
+            <span class="field__label">Tên đăng nhập</span>
+            <input type="text" id="login-username" autocomplete="username" autocapitalize="off" spellcheck="false">
+          </label>
+          <label class="field">
+            <span class="field__label">Mật khẩu</span>
+            <input type="password" id="login-password" autocomplete="current-password">
+          </label>
+        </div>
+        <div id="login-error" class="alert alert-danger hidden" role="alert"></div>
+        <button type="submit" id="btn-login" class="btn btn-primary btn-block btn-lg" style="margin-top:16px">Đăng nhập</button>
+        <div class="demo-accounts hidden" id="demo-accounts">
+          Tài khoản demo (MOCK): <code>admin</code>, <code>hr01</code>, <code>sup01</code>, <code>mgr01</code> — mật khẩu <code>Test1234</code>
+        </div>
+      </form>
+
+      <form id="register-form" class="hidden" novalidate>
+        <div class="grid">
+          <div class="grid-2">
+            <label class="field" data-key="reg-fullname">
+              <span class="field__label">Họ tên</span>
+              <input type="text" id="reg-fullname" autocomplete="name" maxlength="120">
+              <span class="field__missing">Nên nhập họ tên</span>
+            </label>
+            <label class="field" data-key="reg-emplid">
+              <span class="field__label">Mã nhân viên</span>
+              <input type="text" id="reg-emplid" maxlength="40">
+              <span class="field__missing">Nên nhập mã nhân viên</span>
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field" data-key="reg-dept">
+              <span class="field__label">Bộ phận</span>
+              <select id="reg-dept"><option value="">— Chọn bộ phận —</option></select>
+              <span class="field__missing">Nên chọn bộ phận</span>
+            </label>
+            <label class="field" data-key="reg-email">
+              <span class="field__label">Email</span>
+              <input type="email" id="reg-email" autocomplete="email" maxlength="120">
+              <span class="field__missing">Nên nhập email</span>
+            </label>
+          </div>
+          <label class="field" data-key="reg-username">
+            <span class="field__label">Tên đăng nhập <small>(cần có)</small></span>
+            <input type="text" id="reg-username" autocomplete="username" autocapitalize="off" spellcheck="false" maxlength="60">
+            <span class="field__missing">Cần tên đăng nhập</span>
+          </label>
+          <div class="grid-2">
+            <label class="field" data-key="reg-password">
+              <span class="field__label">Mật khẩu <small>(cần có)</small></span>
+              <input type="password" id="reg-password" autocomplete="new-password" placeholder="≥ 8 ký tự, có chữ và số">
+              <span class="field__missing">Cần mật khẩu</span>
+            </label>
+            <label class="field" data-key="reg-confirm">
+              <span class="field__label">Nhập lại mật khẩu</span>
+              <input type="password" id="reg-confirm" autocomplete="new-password">
+              <span class="field__missing">Nhập lại mật khẩu</span>
+            </label>
+          </div>
+        </div>
+        <input type="text" id="reg-honeypot" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div id="register-error" class="alert alert-danger hidden" role="alert"></div>
+        <div id="register-success" class="alert alert-success hidden"></div>
+        <button type="submit" id="btn-register" class="btn btn-primary btn-block btn-lg" style="margin-top:16px">Gửi đăng ký</button>
+        <p class="field__hint" style="margin-top:10px">Sau khi đăng ký, quản trị viên sẽ kích hoạt và gán vai trò cho bạn.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- ============ ĐỔI MẬT KHẨU LẦN ĐẦU ============ -->
+  <section id="force-change-section" class="auth-wrap hidden">
+    <form class="card" id="force-change-form" novalidate>
+      <div class="auth-head">
+        <h1>Đặt mật khẩu mới</h1>
+        <p>Đây là lần đăng nhập đầu tiên hoặc mật khẩu vừa được đặt lại.</p>
+      </div>
+      <div class="grid">
+        <label class="field"><span class="field__label">Mật khẩu hiện tại (tạm)</span><input type="password" id="fc-old" autocomplete="current-password"></label>
+        <label class="field"><span class="field__label">Mật khẩu mới</span><input type="password" id="fc-new" autocomplete="new-password" placeholder="≥ 8 ký tự, có chữ và số"></label>
+        <label class="field"><span class="field__label">Nhập lại mật khẩu mới</span><input type="password" id="fc-confirm" autocomplete="new-password"></label>
+      </div>
+      <div id="force-change-error" class="alert alert-danger hidden" role="alert"></div>
+      <button type="submit" id="btn-force-change" class="btn btn-primary btn-block btn-lg" style="margin-top:16px">Lưu mật khẩu</button>
+      <button type="button" id="btn-force-cancel" class="btn btn-ghost btn-block" style="margin-top:6px">Đăng xuất</button>
+    </form>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section id="dashboard-section" class="hidden">
+
+    <nav class="nav-tabs" id="nav-tabs">
+      <button type="button" class="nav-tab active" data-tab="requests">Duyệt giấy phép <span class="count-pill" id="pill-requests"></span></button>
+      <button type="button" class="nav-tab admin-only hidden" data-tab="depts">Bộ phận &amp; người duyệt</button>
+      <button type="button" class="nav-tab admin-only hidden" data-tab="users">Người dùng <span class="count-pill" id="pill-users"></span></button>
+      <button type="button" class="nav-tab admin-only hidden" data-tab="config">Cấu hình</button>
+      <button type="button" class="nav-tab admin-only hidden" data-tab="audit">Nhật ký</button>
+      <button type="button" class="nav-tab" data-tab="account">Tài khoản</button>
+    </nav>
+
+    <!-- TAB: DUYỆT GIẤY PHÉP -->
+    <div id="tab-requests" class="tab-content">
+      <div class="alert alert-warning hidden" id="no-sig-warning" style="margin:0 0 16px">
+        Bạn chưa có chữ ký số nên chưa thể duyệt. <button type="button" class="btn btn-sm btn-secondary" id="btn-goto-account">Ký ngay</button>
+      </div>
+
+      <div class="chips" id="req-chips" style="margin-bottom:12px">
+        <button type="button" class="chip active" data-chip="mine">Cần tôi duyệt <span class="chip__n" id="chip-n-mine"></span></button>
+        <button type="button" class="chip" data-chip="pending">Đang chờ duyệt <span class="chip__n" id="chip-n-pending"></span></button>
+        <button type="button" class="chip" data-chip="approved">Đã duyệt <span class="chip__n" id="chip-n-approved"></span></button>
+        <button type="button" class="chip" data-chip="rejected">Từ chối <span class="chip__n" id="chip-n-rejected"></span></button>
+        <button type="button" class="chip" data-chip="all">Tất cả <span class="chip__n" id="chip-n-all"></span></button>
+      </div>
+
+      <div class="toolbar">
+        <label class="field field--grow"><span class="sr-only">Tìm</span>
+          <input type="search" id="flt-search" class="search-input" placeholder="Tìm tên, mã NV, mã giấy phép…">
+        </label>
+        <label class="field"><span class="field__label">Từ ngày</span><input type="date" id="flt-date-from"></label>
+        <label class="field"><span class="field__label">Đến ngày</span><input type="date" id="flt-date-to"></label>
+        <label class="field" id="flt-dept-wrap"><span class="field__label">Bộ phận</span>
+          <select id="flt-dept"><option value="">Tất cả</option></select>
+        </label>
+        <button type="button" id="btn-filter" class="btn btn-secondary">Làm mới</button>
+      </div>
+
+      <div class="row hidden" id="bulk-bar" style="margin-bottom:10px">
+        <span class="small muted" id="bulk-count"></span>
+        <button type="button" id="btn-bulk-approve" class="btn btn-success btn-sm">Duyệt các mục đã chọn</button>
+        <button type="button" id="btn-bulk-clear" class="btn btn-ghost btn-sm">Bỏ chọn</button>
+      </div>
+
+      <div id="requests-table"></div>
+    </div>
+
+    <!-- TAB: BỘ PHẬN -->
+    <div id="tab-depts" class="tab-content hidden">
+      <div class="section-title">
+        <div>
+          <h2>Bộ phận &amp; người duyệt</h2>
+          <p class="small muted" style="margin:2px 0 0">Gán Giám sát và Trưởng bộ phận cho từng bộ phận. Nhân viên chọn bộ phận khi xin phép sẽ thấy đúng những người này.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-add-dept">+ Thêm bộ phận</button>
+      </div>
+      <div id="depts-table"></div>
+    </div>
+
+    <!-- TAB: NGƯỜI DÙNG -->
+    <div id="tab-users" class="tab-content hidden">
+      <div class="card pending-card hidden" id="pending-card">
+        <div class="section-title"><h2>Tài khoản chờ kích hoạt</h2></div>
+        <div id="pending-users-list"></div>
+      </div>
+      <div class="toolbar">
+        <label class="field field--grow"><span class="sr-only">Tìm</span>
+          <input type="search" id="users-search" class="search-input" placeholder="Tìm tên, tên đăng nhập, mã NV…">
+        </label>
+        <label class="field"><span class="field__label">Vai trò</span>
+          <select id="users-role-filter">
+            <option value="">Tất cả</option>
+            <option value="admin">Quản trị</option>
+            <option value="hr">Nhân sự (HR)</option>
+            <option value="manager">Trưởng bộ phận</option>
+            <option value="supervisor">Giám sát</option>
+            <option value="security">Bảo vệ</option>
+            <option value="__none">Chưa có vai trò</option>
+          </select>
+        </label>
+        <label class="field"><span class="field__label">Trạng thái</span>
+          <select id="users-status-filter">
+            <option value="">Tất cả</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="LOCKED">Đã khoá</option>
+            <option value="PENDING">Chờ kích hoạt</option>
+            <option value="REJECTED">Đã từ chối</option>
+          </select>
+        </label>
+        <button type="button" id="btn-create-user" class="btn btn-primary">+ Thêm người dùng</button>
+      </div>
+      <div id="all-users-list"></div>
+    </div>
+
+    <!-- TAB: CẤU HÌNH -->
+    <div id="tab-config" class="tab-content hidden">
+      <form id="config-form" class="card" style="max-width:560px" novalidate>
+        <h2 class="card__title">Cấu hình hệ thống</h2>
+        <div class="grid">
+          <label class="field"><span class="field__label">Số giấy phép tối đa / nhân viên / ngày</span><input type="number" id="cfg-max-requests-per-day" min="1"></label>
+          <label class="field"><span class="field__label">Số đăng ký tài khoản tối đa / ngày</span><input type="number" id="cfg-max-register-per-day" min="1"></label>
+          <label class="field"><span class="field__label">Số tài khoản chờ kích hoạt tối đa</span><input type="number" id="cfg-max-pending-users" min="1"></label>
+          <label class="checkbox-line"><input type="checkbox" id="cfg-email-enabled"> Bật thông báo email</label>
+        </div>
+        <button type="submit" id="btn-save-config" class="btn btn-primary" style="margin-top:16px">Lưu cấu hình</button>
+      </form>
+    </div>
+
+    <!-- TAB: NHẬT KÝ -->
+    <div id="tab-audit" class="tab-content hidden">
+      <div class="toolbar">
+        <label class="field"><span class="field__label">Từ ngày</span><input type="date" id="audit-date-from"></label>
+        <label class="field"><span class="field__label">Đến ngày</span><input type="date" id="audit-date-to"></label>
+        <button type="button" id="btn-audit-filter" class="btn btn-secondary">Lọc</button>
+      </div>
+      <div id="audit-log-list"></div>
+    </div>
+
+    <!-- TAB: TÀI KHOẢN -->
+    <div id="tab-account" class="tab-content hidden">
+      <div class="grid-2" style="align-items:start">
+        <div class="card">
+          <h2 class="card__title">Thông tin của tôi</h2>
+          <dl class="kv" id="account-info"></dl>
+          <p class="field__hint" style="margin-top:12px">Thông tin do quản trị viên quản lý — liên hệ admin nếu cần sửa.</p>
+        </div>
+        <form class="card" id="acc-password-form" novalidate>
+          <h2 class="card__title">Đổi mật khẩu</h2>
+          <div class="grid">
+            <label class="field"><span class="field__label">Mật khẩu hiện tại</span><input type="password" id="acc-old-password" autocomplete="current-password"></label>
+            <label class="field"><span class="field__label">Mật khẩu mới</span><input type="password" id="acc-new-password" autocomplete="new-password" placeholder="≥ 8 ký tự, có chữ và số"></label>
+            <label class="field"><span class="field__label">Nhập lại mật khẩu mới</span><input type="password" id="acc-confirm-password" autocomplete="new-password"></label>
+          </div>
+          <button type="submit" id="btn-acc-change-password" class="btn btn-primary" style="margin-top:14px">Đổi mật khẩu</button>
+        </form>
+      </div>
+      <div class="card">
+        <h2 class="card__title">Chữ ký số <small class="muted">— dùng khi duyệt và in lên giấy phép</small></h2>
+        <div class="grid-2" style="align-items:start">
+          <div>
+            <div class="field__label" style="margin-bottom:6px">Chữ ký hiện tại</div>
+            <img id="acc-sig-current" alt="Chữ ký hiện tại" class="signature-img hidden">
+            <p class="muted small" id="acc-sig-none">Chưa có chữ ký</p>
+          </div>
+          <div>
+            <div class="field__label" style="margin-bottom:6px">Ký mới</div>
+            <div class="sig-box">
+              <canvas id="acc-sig-canvas" class="sig-canvas"></canvas>
+              <div class="sig-box__line"></div>
+            </div>
+            <div class="sig-actions">
+              <button type="button" id="btn-acc-sig-clear" class="btn btn-ghost btn-sm">Xoá</button>
+              <button type="button" id="btn-acc-sig-save" class="btn btn-primary btn-sm">Lưu chữ ký</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+</main>
+
+<!-- ============ MODAL: CHI TIẾT / DUYỆT ============ -->
+<div id="approve-modal" class="modal-overlay hidden">
+  <div class="modal modal--lg" role="dialog" aria-modal="true" aria-labelledby="approve-modal-title">
+    <div class="modal-header">
+      <div>
+        <div class="mono muted small" id="approve-modal-id"></div>
+        <h3 id="approve-modal-title">Chi tiết giấy phép</h3>
+      </div>
+      <button type="button" class="btn-close" data-close aria-label="Đóng">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid-2" style="align-items:start">
+        <dl class="kv" id="approve-modal-content"></dl>
+        <div id="approve-modal-steps"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" id="btn-modal-pdf" class="btn btn-secondary">Tải PDF</button>
+      <span class="spacer"></span>
+      <button type="button" id="btn-modal-reject" class="btn btn-danger-soft">Từ chối</button>
+      <button type="button" id="btn-modal-approve" class="btn btn-success">Duyệt</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ MODAL: BỘ PHẬN ============ -->
+<div id="dept-modal" class="modal-overlay hidden">
+  <form class="modal" role="dialog" aria-modal="true" id="dept-form" novalidate>
+    <div class="modal-header">
+      <h3 id="dept-modal-title">Bộ phận</h3>
+      <button type="button" class="btn-close" data-close aria-label="Đóng">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid">
+        <label class="field" data-key="dept-name">
+          <span class="field__label">Tên bộ phận</span>
+          <input type="text" id="df-name" maxlength="80" placeholder="VD: QA, Sản xuất, Kho">
+          <span class="field__missing">Cần tên bộ phận</span>
+        </label>
+        <div class="field">
+          <span class="field__label">Giám sát <small>(chọn nhiều — tài khoản vai trò Giám sát)</small></span>
+          <div class="check-list" id="df-sups"></div>
+        </div>
+        <label class="field">
+          <span class="field__label">Trưởng bộ phận <small>(tài khoản vai trò Trưởng bộ phận)</small></span>
+          <select id="df-mgr"><option value="">— Chưa có —</option></select>
+        </label>
+        <p class="field__hint" style="margin:0">Chưa có người trong danh sách? <a href="#" id="df-add-user">Thêm người dùng mới</a> với vai trò Giám sát / Trưởng bộ phận và bộ phận này — họ sẽ tự được gán.</p>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-close>Huỷ</button>
+      <button type="submit" class="btn btn-primary" id="btn-save-dept">Lưu bộ phận</button>
+    </div>
+  </form>
+</div>
+
+<!-- ============ MODAL: NGƯỜI DÙNG ============ -->
+<div id="user-form-modal" class="modal-overlay hidden">
+  <form class="modal" role="dialog" aria-modal="true" id="user-form" novalidate>
+    <div class="modal-header">
+      <h3 id="user-modal-title">Người dùng</h3>
+      <button type="button" class="btn-close" data-close aria-label="Đóng">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="grid">
+        <div class="grid-2">
+          <label class="field" data-key="uf-username">
+            <span class="field__label">Tên đăng nhập <small>(cần có)</small></span>
+            <input type="text" id="uf-username" autocapitalize="off" spellcheck="false" maxlength="60">
+            <span class="field__missing">Cần tên đăng nhập</span>
+          </label>
+          <label class="field" data-key="uf-fullname">
+            <span class="field__label">Họ tên</span>
+            <input type="text" id="uf-fullname" maxlength="120">
+            <span class="field__missing">Chưa nhập họ tên</span>
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field" data-key="uf-emplid">
+            <span class="field__label">Mã nhân viên</span>
+            <input type="text" id="uf-emplid" maxlength="40">
+            <span class="field__missing">Chưa nhập mã NV</span>
+          </label>
+          <label class="field" data-key="uf-email">
+            <span class="field__label">Email</span>
+            <input type="email" id="uf-email" maxlength="120">
+            <span class="field__missing">Chưa nhập email</span>
+          </label>
+        </div>
+        <div class="grid-2">
+          <label class="field" data-key="uf-role">
+            <span class="field__label">Vai trò</span>
+            <select id="uf-role">
+              <option value="">— Chưa có vai trò —</option>
+              <option value="supervisor">Giám sát</option>
+              <option value="manager">Trưởng bộ phận</option>
+              <option value="hr">Nhân sự (HR)</option>
+              <option value="security">Bảo vệ</option>
+              <option value="admin">Quản trị</option>
+            </select>
+            <span class="field__missing">Chưa có vai trò — chưa dùng được hệ thống</span>
+          </label>
+          <label class="field" data-key="uf-dept">
+            <span class="field__label">Bộ phận</span>
+            <select id="uf-dept"></select>
+            <input type="text" id="uf-dept-other" class="hidden" maxlength="80" placeholder="Tên bộ phận mới">
+            <span class="field__missing">Chưa chọn bộ phận</span>
+          </label>
+        </div>
+        <p class="field__hint" id="uf-link-hint" style="margin:0"></p>
+        <label class="field" id="uf-temp-password-row">
+          <span class="field__label">Mật khẩu tạm <small>(để trống: hệ thống tự tạo và hiện 1 lần)</small></span>
+          <input type="text" id="uf-temp-password" autocomplete="off" placeholder="≥ 8 ký tự, có chữ và số">
+        </label>
+
+        <div id="uf-manage" class="hidden">
+          <div class="field__label" style="margin:6px 0 8px">Chữ ký số</div>
+          <div class="row" style="align-items:flex-start">
+            <img id="uf-sig-preview" class="signature-img hidden" alt="Xem trước chữ ký">
+            <span class="muted small" id="uf-sig-state"></span>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <label class="btn btn-secondary btn-sm" style="cursor:pointer">Chọn ảnh chữ ký…
+              <input type="file" id="sig-upload-input" accept="image/png,image/jpeg" class="hidden">
+            </label>
+            <button type="button" class="btn btn-primary btn-sm hidden" id="btn-sig-upload-save">Lưu chữ ký</button>
+          </div>
+          <div class="field__label" style="margin:16px 0 8px">Thao tác tài khoản</div>
+          <div class="row">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-user-reset">Đặt lại mật khẩu</button>
+            <button type="button" class="btn btn-danger-soft btn-sm" id="btn-user-lock">Khoá tài khoản</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-close>Huỷ</button>
+      <button type="submit" id="btn-save-user" class="btn btn-primary">Lưu</button>
+    </div>
+  </form>
+</div>
+
+<script src="assets/js/config.js"></script>
+<script type="module">
+  import { initHrPage } from './assets/js/page-hr.js';
+  initHrPage();
+</script>
+
+</body>
+</html>
